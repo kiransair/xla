@@ -93,9 +93,10 @@ class ElementalIrEmitterExecutionTypedTest
 };
 
 using FloatTypes =
-    ::testing::Types<bfloat16, tsl::float8_e5m2, tsl::float8_e5m2fnuz,
-                     tsl::float8_e4m3, tsl::float8_e4m3fn, tsl::float8_e4m3fnuz,
-                     tsl::float8_e4m3b11fnuz, tsl::float8_e3m4>;
+    ::testing::Types<bfloat16, tsl::float4_e2m1fn, tsl::float8_e3m4,
+                     tsl::float8_e4m3, tsl::float8_e4m3b11fnuz,
+                     tsl::float8_e4m3fn, tsl::float8_e4m3fnuz, tsl::float8_e5m2,
+                     tsl::float8_e5m2fnuz>;
 
 TYPED_TEST_SUITE(ElementalIrEmitterExecutionTypedTest, FloatTypes);
 
@@ -422,7 +423,8 @@ TYPED_TEST(ElementalIrEmitterExecutionTypedTest, IotaFloat) {
       std::is_same<TypeParam, tsl::float8_e4m3>() ||
       std::is_same<TypeParam, tsl::float8_e4m3fn>() ||
       std::is_same<TypeParam, tsl::float8_e4m3b11fnuz>() ||
-      std::is_same<TypeParam, tsl::float8_e3m4>()) {
+      std::is_same<TypeParam, tsl::float8_e3m4>() ||
+      std::is_same<TypeParam, tsl::float4_e2m1fn>()) {
     GTEST_SKIP() << "Skipping test for type " << tname;
   }
   const auto hlo_text = absl::StrReplaceAll(R"(
@@ -437,6 +439,9 @@ TYPED_TEST(ElementalIrEmitterExecutionTypedTest, IotaFloat) {
 
 TYPED_TEST(ElementalIrEmitterExecutionTypedTest, BatchDotFloat) {
   auto tname = this->TypeName();
+  if (std::is_same<TypeParam, tsl::float4_e2m1fn>()) {
+    GTEST_SKIP() << "Dot operation on E2M1 is not supported";
+  }
   const auto hlo_text = absl::StrReplaceAll(R"(
   HloModule matmul
 
